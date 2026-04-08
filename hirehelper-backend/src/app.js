@@ -13,7 +13,11 @@ const chatRoutes = require('./routes/chat.routes'); // ✅ NEW
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin:[ "http://localhost:4200",
+    "https://angular-frontend-2bq7.vercel.app"],
+    credentials: true
+}));
 app.use(express.json());
 
 app.use('/uploads', express.static('uploads'));

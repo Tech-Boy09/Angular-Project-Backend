@@ -65,7 +65,7 @@ exports.register = async (req, res) => {
       [first_name, last_name, email, hashedPassword, otp, otpExpiry]
     );
 
-    exports.sendEmail(
+    await exports.sendEmail(
       email,
       'HireHelper - OTP Verification',
       `Your OTP for HireHelper is ${otp}. It is valid for ${OTP_EXPIRY_MINUTES} minutes.`
