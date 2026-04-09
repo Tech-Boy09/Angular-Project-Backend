@@ -14,4 +14,5 @@ app.use('/api/notifications', require('./src/routes/notification.routes'));
 app.use('/api/tasks', require('./src/routes/task.routes'));
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(process.env.CLOUD_NAME);
 });

@@ -17,16 +17,17 @@ exports.sendEmail = async (to, subject, text) => {
   try {
     await transporter.sendMail({
       from: `"HireHelper" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      text,
+      to: to,
+      subject : subject,
+      text : text,
     });
+    console.log('Email sent');
   } catch (err) {
     console.error('Email error:', err.message);
   }
 };
 
-// ================= REGISTER =================
+
 exports.register = async (req, res) => {
   const { first_name, last_name, email, password } = req.body;
 
@@ -198,7 +199,7 @@ exports.forgotPassword = async (req, res) => {
       [otp, otpExpiry, email]
     );
 
-    // 🔥 DIRECT EMAIL (NO exports.sendEmail)
+    
     await transporter.sendMail({
       from: `"HireHelper" <${process.env.EMAIL_USER}>`,
       to: email,

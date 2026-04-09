@@ -3,12 +3,21 @@ const db = require('../config/db');
 exports.addTask = async (req, res) => {
   const { title, description, location, start_time, end_time, salary } = req.body;
 
+  // ✅ Validation
   if (!title || !description || !location || !start_time) {
     return res.status(400).json({ message: "Required fields missing" });
   }
 
+  // ✅ Start time validation (FIXED POSITION)
+  if (new Date(start_time) < new Date()) {
+    return res.status(400).json({
+      message: "Start time cannot be in the past ❌"
+    });
+  }
+
   try {
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    // 🔥 Cloudinary URL (IMPORTANT FIX)
+    const imagePath = req.file ? req.file.path : null;
 
     await db.query(
       `INSERT INTO tasks 
@@ -21,7 +30,7 @@ exports.addTask = async (req, res) => {
         location,
         start_time,
         end_time || null,
-        imagePath,
+        imagePath,   // ✅ Cloudinary URL save
         salary || 0, 
         'OPEN'
       ]
@@ -33,14 +42,6 @@ exports.addTask = async (req, res) => {
     console.error("Add Task Error:", err.message);
     res.status(500).json({ message: "Server error" });
   }
-  const now = new Date();
-  const start = new Date(start_time);
-
-  if (start < now) {
-    return res.status(400).json({
-      message: "Start time cannot be in the past ❌"
-    });
-}
 };
 
 
@@ -111,14 +112,13 @@ exports.updateTaskStatus = async (req, res) => {
   }
 };
 
+
 exports.sendOtp = async (req, res) => {
   const { task_id } = req.body;
 
   try {
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+    const expiry = new Date(Date.now() + 5 * 60 * 1000);
 
     const task = await db.query(
       `SELECT t.*, u.email, u.first_name 
@@ -137,10 +137,9 @@ exports.sendOtp = async (req, res) => {
       [otp, expiry, task_id]
     );
 
-   
     const { sendEmail } = require('./auth.controller');
 
-    sendEmail(
+    await sendEmail(
       task.rows[0].email,
       "Task Completion OTP 🔐",
       `Hello ${task.rows[0].first_name}, your OTP is: ${otp}`
@@ -174,12 +173,10 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-   
     if (new Date() > data.otp_expiry) {
       return res.status(400).json({ message: "OTP expired" });
     }
 
-   
     await db.query(
       `UPDATE tasks 
        SET status='COMPLETED', otp=NULL, otp_expiry=NULL 
@@ -187,7 +184,6 @@ exports.verifyOtp = async (req, res) => {
       [task_id]
     );
 
-   
     await db.query(
       `UPDATE requests 
        SET status='COMPLETED' 
